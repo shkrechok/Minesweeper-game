@@ -1,0 +1,46 @@
+body {
+    text-align: center;
+    background-color: black;
+    color:white;
+  }
+table {
+    border: 1px solid black;
+    border-collapse: collapse;
+    margin: 50px auto;
+    background-color: grey;
+  }
+.board {
+    background-color: grey;
+    border: 1px solid black;
+}
+
+.cell {
+    background-color: grey;
+    border: 1px solid black;
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
+
+
+.cell.mine.shown {
+    background-color: red;
+}
+
+
+.cell.mine{
+    /* prefer to see the mines locations, while working on the game */
+    background-color: yellow;
+}
+
+.cell.shown {
+    background-color: white;
+    color: green;
+}
+
+.cell.marked {
+    background-color:pink ;
+}
+
+
+
