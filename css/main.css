@@ -5,10 +5,11 @@ body {
   }
 table {
     border: 1px solid black;
-    border-collapse: collapse;
     margin: 50px auto;
     background-color: grey;
   }
+
+
 .board {
     background-color: grey;
     border: 1px solid black;
@@ -40,6 +41,13 @@ table {
 
 .cell.marked {
     background-color:pink ;
+}
+
+.timer {
+    display: inline-block;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
 }
 
 

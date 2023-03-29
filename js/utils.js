@@ -3,13 +3,12 @@
 function getRandomInt(min, max) {
     min = Math.ceil(min)
     max = Math.floor(max)
-    return Math.floor(Math.random() * (max - min + 1)) + min
+    return Math.floor(Math.random() * (max - min)) + min
 }
 
 function findEmptyRandomCell(board) {
     const emptyLocations = []
-    //except walls
-    for (var i = 0; i < gLevel.SIZE; i++) {
+        for (var i = 0; i < gLevel.SIZE; i++) {
         for (var j = 0; j < gLevel.SIZE; j++) {
             const cell = board[i][j]
             if (!cell.isMine && !cell.isShown) {
