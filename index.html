@@ -2,41 +2,43 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" href="css/main.css">
-    <title>Minesweeper game</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="css/main.css">
+  <title>Minesweeper game</title>
 </head>
 
 <body onload="onInit()">
-    <h1 class="title main-title"  >Minesweeper</h1>
-    
-    <table>
-        <div class="timer">
-            Timer: 0
-        </div>
-        <thead class="levels">
-            <!-- <label>
-              <input type="radio" name="level" value="beginner">
-              Beginner
-            </label>
-            <label>
-              <input type="radio" name="level" value="medium">
-              Medium
-            </label>
-            <label>
-              <input type="radio" name="level" value="expert">
-              Expert
-            </label> -->
-        </thead>
-        <tbody class="board">
-            
-        </tbody>
-    </table>
-    
-    <script src="js/main.js"></script>
-    <script src="js/utils.js"></script>
+  <h1>Minesweeper</h1>
+  <table class="hints-table">
+    <thead>Hints</thead>
+    <tbody class="hints">
+    </tbody>
+  </table>
+  <table>
+    <thead class="levels">
+      <div class="timer">
+        Timer: 0
+      </div>
+      <div class="lives">
+        Lives left : 3
+      </div>
+        <button class="play-again" onclick="onPlayAgainPressed()">
+        <span class="smiley">😊</span>
+        <span>Play again</span>
+      </button>
+    </thead>
+    <tbody class="board">
+
+    </tbody>
+  </table>
+  <footer class="footer">
+    Marina Milman
+  </footer>
+  <script src="js/main.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/hints.js"></script>
 </body>
 
 </html>

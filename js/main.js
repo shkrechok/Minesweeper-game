@@ -1,4 +1,13 @@
 'use strict'
+const MINE = '💣'
+const FLAG = '🚩'
+const EMPTY = ''
+const LIFE = '❤️'
+const HINT = '💡'
+const SMILEY = '😀'
+const SMILEY_WIN = '😎'
+const SMILEY_LOSS = '😵'
+
 
 const gLevels = {
     beginner: {
@@ -19,7 +28,7 @@ const gLevels = {
 }
 
 
-const gGame = {
+var gGame = {
     isOn: false,
     shownCount: 0,
     markedCount: 0,
@@ -27,33 +36,56 @@ const gGame = {
 }
 
 var gBoard
-var gLevel = gLevels['beginner']//.beginner
+var gSelctedLevel = gLevels['beginner']//.beginner
 var gIsFirstClick
 var gGameTimerInterval
+var gIsLoss
+var gIsWin
+var gLives
+var gRevealMineInterval
+var gHintIsOn
+var gHintTimeout
+var gElHint
+
 
 function onInit() {
+    gHintIsOn = false
+    gLives = 3
+    document.querySelector('.lives').innerHTML = 'Lives left: ' + LIFE.repeat(gLives)
+    gIsLoss = false
+    gIsWin = false
     gIsFirstClick = true
-    updateGGame(false, 0, 0, 0)
-    renderTimer(0)
+    gGame = initGameObj(false, 0, 0, 0)
+    if (gGameTimerInterval) clearInterval(gGameTimerInterval)
+    document.querySelector('.timer').innerHTML = 'Timer: 0.000'
+    document.querySelector('.smiley').innerHTML = SMILEY
     gBoard = buildBoard()
+    renderHints()
     renderBoard(gBoard)
+    renderLevels()
     // for debugging
     console.table(gBoard)
     console.log(gGame)
-    renderLevels()
+
 }
 
-function updateGGame(isOn, shownCount, markedCount, secsPassed) {
-    gGame.isOn = isOn
-    gGame.shownCount = shownCount
-    gGame.markedCount = markedCount
-    gGame.secsPassed = secsPassed
+function onPlayAgainPressed() {
+    onInit()
+}
+
+function initGameObj(isOn, shownCount, markedCount, secsPassed) {
+    return {
+        isOn,
+        shownCount,
+        markedCount,
+        secsPassed
+    }
 }
 
 function renderLevels() {
     var strHTML = ''
     for (var level in gLevels) {
-        var checked = gLevels[level].NAME === gLevel.NAME ? 'checked' : ''
+        var checked = gLevels[level].NAME === gSelctedLevel.NAME ? 'checked' : ''
         strHTML += `<label><input type="radio" ${checked} name="level" value="${gLevels[level].NAME}" onclick="handleLevelSelection(this)">${level}</label>`
     }
     var elLevels = document.querySelector('.levels')
@@ -62,41 +94,36 @@ function renderLevels() {
 
 function handleLevelSelection(elLevel) {
 
-    // if (!gGame.isOn) return
-    // if (elLevel.checked) return
     var level = elLevel.value
-    gLevel = gLevels[level]
-    // elLevel.checked = true
-    console.log(gLevel)
+    if (level === gSelctedLevel.NAME) return
+    gSelctedLevel = gLevels[level]
+    console.log(gSelctedLevel)
     onInit()
 }
 
 function buildBoard() {
     const board = []
-    for (var i = 0; i < gLevel.SIZE; i++) {
+    for (var i = 0; i < gSelctedLevel.SIZE; i++) {
         board[i] = []
-        for (var j = 0; j < gLevel.SIZE; j++) {
+        for (var j = 0; j < gSelctedLevel.SIZE; j++) {
             const cell = {
                 minesAroundCount: 0,
                 isShown: false,
                 isMine: false,
-                isMarked: false
+                isMarked: false,
+                isRevealed: false
             }
-            // if (i === 1 && j === 1) cell.isMine = true
-            // if (i === 2 && j === 3) cell.isMine = true
             board[i][j] = cell
         }
     }
-    // placeMines(board)
-    // setMinesNegsCount(board)
-
     return board
 }
 
 function setMinesNegsCount(board) {
-    for (var i = 0; i < gLevel.SIZE; i++) {
-        for (var j = 0; j < gLevel.SIZE; j++) {
+    for (var i = 0; i < gSelctedLevel.SIZE; i++) {
+        for (var j = 0; j < gSelctedLevel.SIZE; j++) {
             var cell = board[i][j]
+            if (cell.isMine) continue
             cell.minesAroundCount = countMinesNegs(board, i, j)
         }
     }
@@ -126,10 +153,17 @@ function renderBoard(board) {
             if (cell.isShown) cellClass += ' shown'
             if (cell.isMine) cellClass += ' mine'
             if (cell.isMarked) cellClass += ' marked'
+            var cellContent = ''
+            if (cell.isShown) {
+                if (cell.isMine) cellContent = MINE
+                else if (cell.minesAroundCount) cellContent = cell.minesAroundCount
+            }
+            else if (cell.isMarked) cellContent = FLAG
 
             strHTML += `<td class=" cell cell-${i}-${j} ${cellClass} "  onclick="onCellClicked(this,${i},${j})" oncontextmenu="onCellMarked(this,event,${i},${j})" >
-            ${(cell.minesAroundCount && cell.isShown) ? cell.minesAroundCount : ''}
+            ${cellContent}
             </td>`
+
         }
         strHTML += '</tr>'
     }
@@ -137,20 +171,39 @@ function renderBoard(board) {
     elBoard.innerHTML = strHTML
 }
 
+
 function onCellClicked(elCell, i, j) {
     var cell = gBoard[i][j]
     if (!gGame.isOn && !gIsFirstClick) return
     if (gIsFirstClick) handleFirstClick(i, j)
-    
+    if (gHintIsOn) handleHint(i, j)
     if (cell.isMine) {
-        showMines()
-        gameOver()
-        return
+        if (gHintIsOn) return
+        gLives--
+        document.querySelector('.lives').innerHTML = 'Lives left: ' + LIFE.repeat(gLives)
+        if (gLives === 0) {
+            showMines()
+            gameOver()
+            gIsLoss = true
+            return
+        } else {
+
+            indicateSteppingOnMine(elCell)
+            return
+        }
     }
+
     if (cell.isShown) return
     handleNotMineNotShownCell(elCell, i, j)
-    // renderBoard(gBoard)
+    renderBoard(gBoard)
     checkGameOver()
+}
+
+function indicateSteppingOnMine(elCell) {
+    elCell.innerHTML = MINE
+    gRevealMineInterval = setTimeout(function () {
+        elCell.innerHTML = ''
+    }, 1000)
 }
 
 function handleFirstClick(i, j) {
@@ -164,20 +217,16 @@ function handleFirstClick(i, j) {
     renderBoard(gBoard)
     gGame.shownCount++
     console.log('Shown Count: ', gGame.shownCount)
-    gGameTimerInterval = setInterval(updateTimer, 1000, startTime)
-   
+    gGameTimerInterval = setInterval(updateTimer, 100, startTime)
+
 }
 
 function updateTimer(startTime) {
     const gTime = Date.now() - startTime
     // presented in seconds with 3 digits after the dot
-    gGame.secsPassed  = (gTime / 1000).toFixed(3)
-    renderTimer(gGame.secsPassed)
-    }
-
-function renderTimer(secsPassed) {
+    gGame.secsPassed = (gTime / 1000).toFixed(3)
     var elTimer = document.querySelector('.timer')
-    elTimer.innerHTML = `Timer: ${secsPassed}`
+    elTimer.innerHTML = `Timer: ${gGame.secsPassed}`
 }
 
 
@@ -185,27 +234,34 @@ function gameOver() {
     console.log('game over')
     gGame.isOn = false
     clearInterval(gGameTimerInterval)
+    var elSmiley = document.querySelector('.smiley')
+    elSmiley.innerHTML = gIsWin ? SMILEY_WIN : SMILEY_LOSS
 
 }
 
 function onCellMarked(elCell, event, i, j) {
+    event.preventDefault()
     if (!gGame.isOn) return
     var cell = gBoard[i][j]
-    event.preventDefault()
+    if (cell.isShown) return
+
     elCell.classList.toggle('marked')
     if (elCell.classList.contains('marked')) {
         gGame.markedCount++
         cell.isMarked = true
+        elCell.innerHTML = FLAG
     } else {
         gGame.markedCount--
         cell.isMarked = false
+        elCell.innerHTML = EMPTY
     }
     console.log('Marked Count: ', gGame.markedCount)
     checkGameOver()
 }
 
 function checkGameOver() {
-    if (gGame.shownCount === gLevel.SIZE ** 2 - gLevel.MINES && gGame.markedCount === gLevel.MINES) {
+    if (gGame.shownCount === gSelctedLevel.SIZE ** 2 - gSelctedLevel.MINES && gGame.markedCount === gSelctedLevel.MINES) {
+        gIsWin = true
         gameOver()
     }
 }
@@ -215,8 +271,6 @@ function handleNotMineNotShownCell(elCell, i, j) {
     cell.isShown = true
     gGame.shownCount++
     console.log('Shown Count: ', gGame.shownCount)
-    elCell.classList.add('shown')
-    elCell.innerText = cell.minesAroundCount
     if (cell.minesAroundCount === 0) {
         revealNegs(i, j)
         elCell.innerText = ''
@@ -225,9 +279,9 @@ function handleNotMineNotShownCell(elCell, i, j) {
 }
 function revealNegs(rowIdx, colIdx) {
     for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
-        if (i < 0 || i >= gLevel.SIZE) continue
+        if (i < 0 || i >= gSelctedLevel.SIZE) continue
         for (var j = colIdx - 1; j <= colIdx + 1; j++) {
-            if (j < 0 || j >= gBoard[0].length) continue
+            if (j < 0 || j >= gSelctedLevel.SIZE) continue
             if (i === rowIdx && j === colIdx) continue
             var cell = gBoard[i][j]
             if (cell.isMine || cell.isShown) continue
@@ -239,13 +293,12 @@ function revealNegs(rowIdx, colIdx) {
 }
 
 function showMines() {
-    for (var i = 0; i < gLevel.SIZE; i++) {
-        for (var j = 0; j < gLevel.SIZE; j++) {
+    for (var i = 0; i < gSelctedLevel.SIZE; i++) {
+        for (var j = 0; j < gSelctedLevel.SIZE; j++) {
             var cell = gBoard[i][j]
             if (cell.isMine) {
-                // var elCell = document.querySelector(`.cell-${i}-${j}`)
                 cell.isShown = true
-                // elCell.classList.add('shown')
+                console.log('cell', cell)
             }
         }
     }

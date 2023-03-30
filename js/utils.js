@@ -8,8 +8,8 @@ function getRandomInt(min, max) {
 
 function findEmptyRandomCell(board) {
     const emptyLocations = []
-        for (var i = 0; i < gLevel.SIZE; i++) {
-        for (var j = 0; j < gLevel.SIZE; j++) {
+    for (var i = 0; i < gSelctedLevel.SIZE; i++) {
+        for (var j = 0; j < gSelctedLevel.SIZE; j++) {
             const cell = board[i][j]
             if (!cell.isMine && !cell.isShown) {
                 const pos = { i, j }
@@ -24,8 +24,9 @@ function findEmptyRandomCell(board) {
 }
 
 function placeMines(board) {
-    for (var i = 0; i < gLevel.MINES; i++) {
+    for (var i = 0; i < gSelctedLevel.MINES; i++) {
         const randCell = findEmptyRandomCell(board)
         board[randCell.i][randCell.j].isMine = true
     }
 }
+
