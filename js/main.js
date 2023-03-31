@@ -270,6 +270,12 @@ function handleNotMineNotShownCell(elCell, i, j) {
     var cell = gBoard[i][j]
     cell.isShown = true
     gGame.shownCount++
+    // in case the cell was marked before
+    if (cell.isMarked) {
+        gGame.markedCount--
+        cell.isMarked = false
+        elCell.classList.remove('marked')
+    }
     console.log('Shown Count: ', gGame.shownCount)
     if (cell.minesAroundCount === 0) {
         revealNegs(i, j)
