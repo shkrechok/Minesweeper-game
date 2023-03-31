@@ -236,6 +236,7 @@ function gameOver() {
     clearInterval(gGameTimerInterval)
     var elSmiley = document.querySelector('.smiley')
     elSmiley.innerHTML = gIsWin ? SMILEY_WIN : SMILEY_LOSS
+    console.log('Game counters: ', gGame)
 
 }
 
