@@ -1,4 +1,5 @@
 function onHintClicked(elHint) {
+    // cannot use hint before first click
     if (!gGame.isOn) return
     elHint.style.backgroundColor = 'yellow'
     gHintIsOn = true

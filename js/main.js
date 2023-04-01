@@ -39,7 +39,6 @@ var gBoard
 var gSelctedLevel = gLevels['beginner']//.beginner
 var gIsFirstClick
 var gGameTimerInterval
-var gIsLoss
 var gIsWin
 var gLives
 var gRevealMineInterval
@@ -52,7 +51,6 @@ function onInit() {
     gHintIsOn = false
     gLives = 3
     document.querySelector('.lives').innerHTML = 'Lives left: ' + LIFE.repeat(gLives)
-    gIsLoss = false
     gIsWin = false
     gIsFirstClick = true
     gGame = initGameObj(false, 0, 0, 0)
@@ -186,7 +184,6 @@ function onCellClicked(elCell, i, j) {
         if (gLives === 0) {
             showMines()
             gameOver()
-            gIsLoss = true
             return
         } else {
 
@@ -196,7 +193,7 @@ function onCellClicked(elCell, i, j) {
     }
 
     if (cell.isShown) return
-    handleNotMineNotShownCell(/*elCell,*/ i, j)
+    handleNotMineNotShownCell( i, j)
     renderBoard(gBoard)
     checkGameOver()
 }
@@ -216,14 +213,13 @@ function handleFirstClick(i, j) {
     var cell = gBoard[i][j]
     cell.isShown = true
     placeMines(gBoard)
-    setMinesNegsCount(gBoard)
-    // renderBoard(gBoard)
+    setMinesNegsCount(gBoard)    
     gGameTimerInterval = setInterval(updateTimer, 100, startTime)
     gGame.shownCount++
     console.log('Shown Count: ', gGame.shownCount)
     if (cell.minesAroundCount === 0) revealNegs(i, j)
     renderBoard(gBoard)
-    
+
 }
 
 function updateTimer(startTime) {
@@ -252,7 +248,7 @@ function onCellMarked(elCell, event, i, j) {
     var cell = gBoard[i][j]
     if (cell.isShown) return
 
-    elCell.classList.toggle('marked')
+    elCell.classList.toggle('marked') // instead of rendering the whole board
     if (elCell.classList.contains('marked')) {
         gGame.markedCount++
         cell.isMarked = true
@@ -273,7 +269,7 @@ function checkGameOver() {
     }
 }
 
-function handleNotMineNotShownCell(/*elCell,*/i, j) {
+function handleNotMineNotShownCell(i, j) {
     var cell = gBoard[i][j]
     // version 2 (missed it was a requirement before): marked cell can not be shown. 
     if (!cell.isMarked) {
@@ -281,13 +277,12 @@ function handleNotMineNotShownCell(/*elCell,*/i, j) {
         gGame.shownCount++
     }
     // version 1: in case the cell was marked before but there was no mine in it, the cell is not marked anymore but shown
-    //  (since clicked or a an expansion of a cell with no mines around). But then I need to pass the elCell to the function (and select the element in revealNegs function)
+    //  (since clicked or a an expansion of a cell with no mines around). 
     //cell.isShown = true
     //gGame.shownCount++
     // if (cell.isMarked) {
     //     gGame.markedCount--
     //     cell.isMarked = false
-    //     elCell.classList.remove('marked')
     //     console.log('Marked Count: ', gGame.markedCount)
     // }
     console.log('Shown Count: ', gGame.shownCount)
@@ -302,8 +297,7 @@ function revealNegs(rowIdx, colIdx) {
             if (i === rowIdx && j === colIdx) continue
             var cell = gBoard[i][j]
             if (cell.isMine || cell.isShown) continue
-            // var elCell = document.querySelector(`.cell-${i}-${j}`)
-            handleNotMineNotShownCell(/*elCell,*/i, j)
+            handleNotMineNotShownCell(i, j)
 
         }
     }
