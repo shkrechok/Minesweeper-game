@@ -60,10 +60,9 @@ table {
 
 }
 
-/* .cell.marked {
-    background-color: pink;
-
-} */
+.cell.marked {
+    cursor: default;
+}
 
 .timer {
     display: inline-block;

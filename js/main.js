@@ -111,6 +111,7 @@ function buildBoard() {
                 isShown: false,
                 isMine: false,
                 isMarked: false,
+                // for hint reveal
                 isRevealed: false
             }
             board[i][j] = cell
@@ -177,6 +178,7 @@ function onCellClicked(elCell, i, j) {
     if (!gGame.isOn && !gIsFirstClick) return
     if (gIsFirstClick) handleFirstClick(i, j)
     if (gHintIsOn) handleHint(i, j)
+    if (cell.isMarked) return  // cannot click on a marked cell
     if (cell.isMine) {
         if (gHintIsOn) return
         gLives--
@@ -206,6 +208,7 @@ function indicateSteppingOnMine(elCell) {
     }, 1000)
 }
 
+// first click is never a mine. The mines are placed after the first click
 function handleFirstClick(i, j) {
     const startTime = Date.now()
     gIsFirstClick = false
@@ -242,6 +245,7 @@ function gameOver() {
 
 function onCellMarked(elCell, event, i, j) {
     event.preventDefault()
+    // cannot mark cell before first click
     if (!gGame.isOn) return
     var cell = gBoard[i][j]
     if (cell.isShown) return
@@ -269,14 +273,20 @@ function checkGameOver() {
 
 function handleNotMineNotShownCell(elCell, i, j) {
     var cell = gBoard[i][j]
+    // version 2 (missed it was a requirement before): marked cell can not be shown. 
+    if(!cell.isMarked){
     cell.isShown = true
     gGame.shownCount++
-    // in case the cell was marked before
-    if (cell.isMarked) {
-        gGame.markedCount--
-        cell.isMarked = false
-        elCell.classList.remove('marked')
     }
+    // version 1: in case the cell was marked before but there was no mine in it, the cell is not marked anymore but shown (since clicked or a an expansion of a cell with no mines around)
+    //cell.isShown = true
+    //gGame.shownCount++
+    // if (cell.isMarked) {
+    //     gGame.markedCount--
+    //     cell.isMarked = false
+    //     elCell.classList.remove('marked')
+    //     console.log('Marked Count: ', gGame.markedCount)
+    // }
     console.log('Shown Count: ', gGame.shownCount)
     if (cell.minesAroundCount === 0) {
         revealNegs(i, j)
@@ -304,7 +314,7 @@ function showMines() {
         for (var j = 0; j < gSelctedLevel.SIZE; j++) {
             var cell = gBoard[i][j]
             if (cell.isMine) {
-                cell.isShown = true
+                cell.isShown = true            
                 console.log('cell', cell)
             }
         }

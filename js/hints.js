@@ -5,6 +5,7 @@ function onHintClicked(elHint) {
     gElHint = elHint
 }
 
+// on hint marked cell are also revealed
 function revealNegsHint(i, j) {
     for (var x = i - 1; x <= i + 1; x++) {
         if (x < 0 || x >= gSelctedLevel.SIZE) continue
